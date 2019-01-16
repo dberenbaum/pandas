@@ -2,13 +2,12 @@
 
 from __future__ import print_function
 
+import numpy as np
 import pytest
 
-import numpy as np
-
 from pandas.compat import lrange, string_types
-from pandas import DataFrame, Series
 
+from pandas import DataFrame, Series
 import pandas.util.testing as tm
 
 
@@ -55,7 +54,7 @@ def test_duplicated_keep(keep, expected):
     tm.assert_series_equal(result, expected)
 
 
-@pytest.mark.xfail(reason="GH21720; nan/None falsely considered equal")
+@pytest.mark.xfail(reason="GH#21720; nan/None falsely considered equal")
 @pytest.mark.parametrize('keep, expected', [
     ('first', Series([False, False, True, False, True])),
     ('last', Series([True, True, False, False, False])),
@@ -260,6 +259,23 @@ def test_drop_duplicates_tuple():
     expected = df.loc[[0, 1, 2, 3]]
     result = df.drop_duplicates((('AA', 'AB'), 'B'))
     tm.assert_frame_equal(result, expected)
+
+
+@pytest.mark.parametrize('df', [
+    DataFrame(),
+    DataFrame(columns=[]),
+    DataFrame(columns=['A', 'B', 'C']),
+    DataFrame(index=[]),
+    DataFrame(index=['A', 'B', 'C'])
+])
+def test_drop_duplicates_empty(df):
+    # GH 20516
+    result = df.drop_duplicates()
+    tm.assert_frame_equal(result, df)
+
+    result = df.copy()
+    result.drop_duplicates(inplace=True)
+    tm.assert_frame_equal(result, df)
 
 
 def test_drop_duplicates_NA():
